@@ -5,9 +5,10 @@ import AppsPage from './pages/AppsPage'
 import Timeline from './pages/Timeline'
 import History from './pages/History'
 import Settings from './pages/Settings'
+import AIInsights from './pages/AIInsights'
 import type { CurrentActivity } from './types'
 
-export type Page = 'dashboard' | 'apps' | 'timeline' | 'history' | 'settings'
+export type Page = 'dashboard' | 'apps' | 'timeline' | 'history' | 'ai' | 'settings'
 
 export default function App(): JSX.Element {
   const [page, setPage] = useState<Page>('dashboard')
@@ -27,6 +28,7 @@ export default function App(): JSX.Element {
         {page === 'apps' && <AppsPage />}
         {page === 'timeline' && <Timeline />}
         {page === 'history' && <History />}
+        {page === 'ai' && <AIInsights />}
         {page === 'settings' && <Settings />}
       </main>
     </div>

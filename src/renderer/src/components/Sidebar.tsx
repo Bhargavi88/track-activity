@@ -10,11 +10,12 @@ interface SidebarProps {
   currentActivity: CurrentActivity | null
 }
 
-const navItems: { id: Page; label: string; icon: string }[] = [
+const navItems: { id: Page; label: string; icon: string; highlight?: boolean }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
   { id: 'apps', label: 'Apps', icon: '⊟' },
   { id: 'timeline', label: 'Timeline', icon: '◫' },
   { id: 'history', label: 'History', icon: '◷' },
+  { id: 'ai', label: 'AI Insights', icon: '🧠', highlight: true },
   { id: 'settings', label: 'Settings', icon: '⚙' }
 ]
 
@@ -55,10 +56,12 @@ export default function Sidebar({ page, onNavigate, currentActivity }: SidebarPr
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-left ${
               page === item.id
                 ? 'bg-accent-purple/15 text-accent-purple font-medium border border-accent-purple/20'
+                : item.highlight
+                ? 'text-fuchsia-400 hover:bg-fuchsia-500/10 border border-transparent hover:border-fuchsia-500/20'
                 : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary border border-transparent'
             }`}
           >
-            <span className="text-base w-5 text-center opacity-80">{item.icon}</span>
+            <span className="text-base w-5 text-center opacity-90">{item.icon}</span>
             {item.label}
           </button>
         ))}
