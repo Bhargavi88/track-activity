@@ -4,24 +4,19 @@ import Dashboard from './pages/Dashboard'
 import AppsPage from './pages/AppsPage'
 import Timeline from './pages/Timeline'
 import History from './pages/History'
+import Settings from './pages/Settings'
 import type { CurrentActivity } from './types'
 
-export type Page = 'dashboard' | 'apps' | 'timeline' | 'history'
+export type Page = 'dashboard' | 'apps' | 'timeline' | 'history' | 'settings'
 
 export default function App(): JSX.Element {
   const [page, setPage] = useState<Page>('dashboard')
   const [currentActivity, setCurrentActivity] = useState<CurrentActivity | null>(null)
 
   useEffect(() => {
-    // Get initial activity
     window.api.getCurrentActivity().then(setCurrentActivity).catch(console.error)
-
-    // Subscribe to changes
-    const unsubscribe = window.api.onActivityChanged((activity) => {
-      setCurrentActivity(activity)
-    })
-
-    return unsubscribe
+    const unsub = window.api.onActivityChanged(setCurrentActivity)
+    return unsub
   }, [])
 
   return (
@@ -32,6 +27,7 @@ export default function App(): JSX.Element {
         {page === 'apps' && <AppsPage />}
         {page === 'timeline' && <Timeline />}
         {page === 'history' && <History />}
+        {page === 'settings' && <Settings />}
       </main>
     </div>
   )

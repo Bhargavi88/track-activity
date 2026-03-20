@@ -1,7 +1,6 @@
 import type { CategoryName } from '../shared/types'
 import { CATEGORY_COLORS } from '../shared/types'
 
-// Maps exe name (lowercase) to friendly display name
 const APP_NAME_MAP: Record<string, string> = {
   'code.exe': 'Visual Studio Code',
   'code - insiders.exe': 'VS Code Insiders',
@@ -78,7 +77,6 @@ const APP_NAME_MAP: Record<string, string> = {
   '7zfm.exe': '7-Zip'
 }
 
-// Maps exe name (lowercase) to category
 const APP_CATEGORY_MAP: Record<string, CategoryName> = {
   'code.exe': 'Development',
   'code - insiders.exe': 'Development',
@@ -150,23 +148,106 @@ const APP_CATEGORY_MAP: Record<string, CategoryName> = {
   'calc.exe': 'System'
 }
 
+// Browser executables — we'll try to extract the site from the window title
+const BROWSER_EXES = new Set([
+  'chrome.exe', 'firefox.exe', 'msedge.exe',
+  'opera.exe', 'brave.exe', 'vivaldi.exe', 'iexplore.exe'
+])
+
+// Ordered list of site patterns: first match wins
+const BROWSER_SITES: { pattern: RegExp; name: string; category: CategoryName }[] = [
+  // Development
+  { pattern: /\bgithub\b/i, name: 'GitHub', category: 'Development' },
+  { pattern: /\bgitlab\b/i, name: 'GitLab', category: 'Development' },
+  { pattern: /\bbitbucket\b/i, name: 'Bitbucket', category: 'Development' },
+  { pattern: /stack overflow/i, name: 'Stack Overflow', category: 'Development' },
+  { pattern: /\bvercel\b/i, name: 'Vercel', category: 'Development' },
+  { pattern: /\bnetlify\b/i, name: 'Netlify', category: 'Development' },
+  { pattern: /amazon web services|\baws\b/i, name: 'AWS', category: 'Development' },
+  { pattern: /\bnpm\b/i, name: 'npm', category: 'Development' },
+  { pattern: /\bheroku\b/i, name: 'Heroku', category: 'Development' },
+  { pattern: /codepen/i, name: 'CodePen', category: 'Development' },
+  { pattern: /codesandbox/i, name: 'CodeSandbox', category: 'Development' },
+  { pattern: /replit/i, name: 'Replit', category: 'Development' },
+  { pattern: /\bjira\b/i, name: 'Jira', category: 'Productivity' },
+  { pattern: /confluence/i, name: 'Confluence', category: 'Productivity' },
+  { pattern: /\blinear\b/i, name: 'Linear', category: 'Productivity' },
+  // AI tools
+  { pattern: /chatgpt|chat\.openai/i, name: 'ChatGPT', category: 'Productivity' },
+  { pattern: /claude\.ai/i, name: 'Claude', category: 'Productivity' },
+  { pattern: /\bgemini\b/i, name: 'Gemini', category: 'Productivity' },
+  { pattern: /perplexity/i, name: 'Perplexity', category: 'Productivity' },
+  // Communication
+  { pattern: /\bgmail\b/i, name: 'Gmail', category: 'Communication' },
+  { pattern: /google meet/i, name: 'Google Meet', category: 'Communication' },
+  { pattern: /outlook\.live|outlook\.office/i, name: 'Outlook Web', category: 'Communication' },
+  // Productivity / Docs
+  { pattern: /google docs/i, name: 'Google Docs', category: 'Productivity' },
+  { pattern: /google sheets/i, name: 'Google Sheets', category: 'Productivity' },
+  { pattern: /google slides/i, name: 'Google Slides', category: 'Productivity' },
+  { pattern: /\bnotion\b/i, name: 'Notion', category: 'Productivity' },
+  { pattern: /\btrello\b/i, name: 'Trello', category: 'Productivity' },
+  { pattern: /\basana\b/i, name: 'Asana', category: 'Productivity' },
+  // Design
+  { pattern: /\bfigma\b/i, name: 'Figma', category: 'Design' },
+  { pattern: /canva/i, name: 'Canva', category: 'Design' },
+  // Social
+  { pattern: /\blinkedin\b/i, name: 'LinkedIn', category: 'Social' },
+  { pattern: /\btwitter\b|x\.com/i, name: 'Twitter / X', category: 'Social' },
+  { pattern: /\breddit\b/i, name: 'Reddit', category: 'Social' },
+  { pattern: /\bfacebook\b/i, name: 'Facebook', category: 'Social' },
+  { pattern: /\binstagram\b/i, name: 'Instagram', category: 'Social' },
+  { pattern: /\bhackernews\b|hacker news/i, name: 'Hacker News', category: 'Social' },
+  // Entertainment
+  { pattern: /\byoutube\b/i, name: 'YouTube', category: 'Entertainment' },
+  { pattern: /\bnetflix\b/i, name: 'Netflix', category: 'Entertainment' },
+  { pattern: /\btwitch\b/i, name: 'Twitch', category: 'Entertainment' },
+  { pattern: /\bdisney\b|\bdisney\+/i, name: 'Disney+', category: 'Entertainment' },
+  { pattern: /\bspotify\b/i, name: 'Spotify Web', category: 'Entertainment' },
+]
+
+export interface AppClassification {
+  appName: string
+  category: CategoryName
+  color: string
+  isBrowserSite: boolean
+}
+
+export function classifyWindow(exeName: string, windowTitle: string): AppClassification {
+  const exeKey = exeName.toLowerCase()
+
+  // Check if it's a browser and try to identify the site
+  if (BROWSER_EXES.has(exeKey)) {
+    for (const site of BROWSER_SITES) {
+      if (site.pattern.test(windowTitle)) {
+        return {
+          appName: site.name,
+          category: site.category,
+          color: CATEGORY_COLORS[site.category],
+          isBrowserSite: true
+        }
+      }
+    }
+  }
+
+  const friendlyName = getFriendlyName(exeName)
+  const category: CategoryName = APP_CATEGORY_MAP[exeKey] ?? 'Other'
+  return {
+    appName: friendlyName,
+    category,
+    color: CATEGORY_COLORS[category],
+    isBrowserSite: false
+  }
+}
+
 export function getFriendlyName(exeName: string): string {
   const key = exeName.toLowerCase()
   if (APP_NAME_MAP[key]) return APP_NAME_MAP[key]
-  // Strip .exe and capitalize
   return exeName.replace(/\.exe$/i, '').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 export function classifyApp(exeName: string): { category: CategoryName; color: string } {
   const key = exeName.toLowerCase()
   const category: CategoryName = APP_CATEGORY_MAP[key] ?? 'Other'
-  const color = CATEGORY_COLORS[category]
-  return { category, color }
-}
-
-export function getCustomCategory(
-  appName: string,
-  customCategories: Map<string, { category: string; color: string }>
-): { category: string; color: string } | null {
-  return customCategories.get(appName) ?? null
+  return { category, color: CATEGORY_COLORS[category] }
 }

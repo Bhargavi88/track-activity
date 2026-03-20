@@ -1,32 +1,25 @@
-// Re-export shared types for renderer use
 export type {
-  ActivitySession,
-  AppStat,
-  HourlyActivity,
-  DayStats,
-  CurrentActivity,
-  Category,
-  CategoryName
+  ActivitySession, AppStat, CategoryStat, HourlyActivity,
+  DayStats, CurrentActivity, Category, CategoryName, ProductivityScore
 } from '../../shared/types'
 
-export { CATEGORY_COLORS } from '../../shared/types'
+export { CATEGORY_COLORS, CATEGORY_PRODUCTIVITY, CATEGORY_ICONS } from '../../shared/types'
 
-// Window API types
 declare global {
   interface Window {
     api: {
       getStatsToday: () => Promise<import('../../shared/types').DayStats>
       getStatsDate: (date: string) => Promise<import('../../shared/types').DayStats>
       getSessionsDate: (date: string) => Promise<import('../../shared/types').ActivitySession[]>
-      getStatsRange: (
-        startDate: string,
-        endDate: string
-      ) => Promise<{ date: string; totalTime: number }[]>
+      getStatsRange: (s: string, e: string) => Promise<{ date: string; totalTime: number }[]>
       getCurrentActivity: () => Promise<import('../../shared/types').CurrentActivity | null>
       setCategory: (appName: string, category: string) => Promise<void>
       getCategories: () => Promise<import('../../shared/types').Category[]>
+      exportCsv: (start: string, end: string) => Promise<{ success: boolean; filePath?: string }>
+      clearData: (beforeDate?: string) => Promise<void>
+      getDataPath: () => Promise<string>
       onActivityChanged: (
-        callback: (activity: import('../../shared/types').CurrentActivity) => void
+        cb: (activity: import('../../shared/types').CurrentActivity) => void
       ) => () => void
     }
   }
